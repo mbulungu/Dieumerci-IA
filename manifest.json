@@ -1,0 +1,17 @@
+{
+  "name": "Dieumerci IA",
+  "short_name": "DieumerciIA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#efeae2",
+  "theme_color": "#008069",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/5125/5125703.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
