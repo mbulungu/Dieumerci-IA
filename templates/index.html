@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <title>Dieumerci IA - WhatsApp Style</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Conteneur principal style WhatsApp */
+        .chat-container {
+            width: 100%;
+            max-width: 900px;
+            height: 90vh;
+            background-color: #efeae2; /* Fond WhatsApp */
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #d1d7db;
+        }
+
+        /* En-tête WhatsApp */
+        .chat-header {
+            background-color: #008069;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chat-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .chat-header .status {
+            font-size: 12px;
+            color: #c1e3db;
+            display: block;
+        }
+
+        /* Zone de discussion */
+        .chat-box {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Style de base des bulles - STRICTEMENT CARRÉ */
+        .message {
+            max-width: 65%;
+            padding: 8px 14px;
+            font-size: 14.5px;
+            line-height: 1.4;
+            color: #111b21;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+            border-radius: 0px; /* Assure que c'est bien carré */
+        }
+
+        /* Message de l'utilisateur (à droite, vert clair) */
+        .message.user {
+            background-color: #d9fdd3;
+            align-self: flex-end;
+        }
+
+        /* Message de l'IA (à gauche, blanc) */
+        .message.bot {
+            background-color: #ffffff;
+            align-self: flex-start;
+        }
+
+        /* Zone de saisie en bas (Gris clair WhatsApp) */
+        .input-area {
+            background-color: #f0f2f5;
+            padding: 10px 20px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            border-top: 1px solid #e9edef;
+        }
+
+        /* Champ de texte carré */
+        .input-area input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ffffff;
+            background-color: #ffffff;
+            font-size: 15px;
+            color: #3b4a54;
+            outline: none;
+            border-radius: 0px; /* Carré */
+        }
+
+        /* Bouton Envoyer carré */
+        .input-area button {
+            background-color: #008069;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 0px; /* Carré */
+            transition: background 0.2s;
+        }
+
+        .input-area button:hover {
+            background-color: #006653;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <div>
+                <h2>DIEUMERCI IA</h2>
+                <span class="status">en ligne</span>
+            </div>
+        </div>
+
+        <div class="chat-box" id="chatBox">
+            <div class="message bot">
+                Bonjour ! Je suis <strong>Dieumerci IA</strong>. Comment puis-je vous aider aujourd'hui ?
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Écrivez votre message ici..." onkeypress="checkEnter(event)">
+            <button onclick="sendMessage()">Envoyer</button>
+        </div>
+    </div>
+
+    <script>
+        function sendMessage() {
+            var input = document.getElementById("userInput");
+            var messageText = input.value.trim();
+            if (messageText === "") return;
+
+            var chatBox = document.getElementById("chatBox");
+
+            // 1. Ajouter le message de l'utilisateur
+            var userDiv = document.createElement("div");
+            userDiv.className = "message user";
+            userDiv.innerText = messageText;
+            chatBox.appendChild(userDiv);
+
+            // Vider le champ
+            input.value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // 2. Envoyer la requete au serveur Flask
+            fetch('/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'message=' + encodeURIComponent(messageText)
+            })
+            .then(response => response.json())
+            .then(data => {
+                var botDiv = document.createElement("div");
+                botDiv.className = "message bot";
+                
+                if (data.response) {
+                    botDiv.innerText = data.response;
+                } else if (data.error) {
+                    botDiv.innerText = "Erreur : " + data.error;
+                    botDiv.style.color = "red";
+                }
+                
+                chatBox.appendChild(botDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            })
+            .catch(error => {
+                var errorDiv = document.createElement("div");
+                errorDiv.className = "message bot";
+                errorDiv.innerText = "Une erreur est survenue.";
+                errorDiv.style.color = "red";
+                chatBox.appendChild(errorDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
+
+        function checkEnter(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+    
+        if ('serviceWorker' in navigator) {
+         navigator.serviceWorker.register('/sw.js')
+          .then(() => console.log('Application Mobile prête !'))
+              .catch(err => console.log('Erreur Service Worker', err));
+      }
+    </script>
+    </body>
+    </html>
